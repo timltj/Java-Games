@@ -1,2 +1,2 @@
 # Java-Games
-Self-created small to medium scale Java games.
+Self-written small to medium scale Java games.
