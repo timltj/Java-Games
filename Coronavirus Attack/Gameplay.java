@@ -20,9 +20,19 @@ import java.io.File;
  * Encapsulates the gameplay events.
  */
 public class Gameplay extends JPanel implements KeyListener, ActionListener {
+    // static final fields
+    private static final int delay = 8;
+    
+    private static final Font scoreFont = new Font("serif", Font.BOLD, 25);
+    private static final Font endFont = new Font("serif", Font.BOLD, 30);
+    private static final Font restartFont = new Font("serif", Font.BOLD, 20);
+
+    private static final Image background = new Image(new File("darkcity.jpg"));
+    private static final Image virus = new Image(new File("coronavirus.png"));
+    private static final Image paddle = new Image(new File("petridish.png"));
+
     // attributes
-    private final Timer timer;
-    private final int delay = 8;
+    private final Timer timer;    
     
     private boolean play = false;
     private int totalBricks = 21;    
@@ -40,12 +50,12 @@ public class Gameplay extends JPanel implements KeyListener, ActionListener {
      * Constructs a Gameplay.
      */
     public Gameplay() {
-        map = new MapGenerator(3, 7);
+        this.map = new MapGenerator(3, 7);
+        this.timer = new Timer(delay, this);
+        this.timer.start();        
         addKeyListener(this);
         setFocusable(true);
-        setFocusTraversalKeysEnabled(false);
-        timer = new Timer(delay, this);
-        timer.start();
+        setFocusTraversalKeysEnabled(false);        
     }
     
     /**
@@ -73,30 +83,25 @@ public class Gameplay extends JPanel implements KeyListener, ActionListener {
 
         // draw player score
         g.setColor(Color.WHITE);
-        g.setFont(new Font("serif", Font.BOLD, 25));
+        g.setFont(scoreFont);
         g.drawString("Score: " + score, 560, 30);
 
-        // draw win and lose screen  
-        if (totalBricks <= 0) { // win
+        // draw win and lose screens      
+        if (totalBricks <= 0 || ballposY > 570) {
             play = false;
             ballXdir = 0;
-            ballYdir = 0;
-            g.setColor(Color.GREEN);
-            g.setFont(new Font("serif", Font.BOLD, 30));
-            g.drawString("Mission Success!", 235, 300);
+            ballYdir = 0;    
+            g.setFont(endFont);
 
-            g.setFont(new Font("serif", Font.BOLD, 20));
-            g.drawString("Press 'Enter' to Restart", 240, 350);         
-        }
-        if (ballposY > 570) { // lose
-            play = false;
-            ballXdir = 0;
-            ballYdir = 0;
-            g.setColor(Color.RED);
-            g.setFont(new Font("serif", Font.BOLD, 30));
-            g.drawString("Mission Failed, Score: " + Integer.toString(score), 180, 300);
+            if (totalBricks <= 0) { // win
+                g.setColor(Color.GREEN);
+                g.drawString("Mission Success!", 235, 300);
+            } else if (ballposY > 570) { // lose
+                g.setColor(Color.RED);        
+                g.drawString("Mission Failed, Score: " + Integer.toString(score), 180, 300);
+            }
 
-            g.setFont(new Font("serif", Font.BOLD, 20));
+            g.setFont(restartFont);
             g.drawString("Press 'Enter' to Restart", 240, 350);
         } 
 
@@ -107,6 +112,7 @@ public class Gameplay extends JPanel implements KeyListener, ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         timer.start(); // start game timer
+        
         if (play) {
             // paddle-ball collision detection
             if (new Rectangle(ballposX, ballposY, 20, 20)
@@ -116,7 +122,7 @@ public class Gameplay extends JPanel implements KeyListener, ActionListener {
             // ball-brick collision detection
             A: for (int i = 0; i < map.map.length; i++) {
                 for (int j = 0; j < map.map[0].length; j++) {
-                    if (map.map[i][j] > 0) { // brick is not broken
+                    if (!map.map[i][j]) { // brick is not broken
                         // collidable brick attributes
                         int brickX = j * map.brickWidth + 80;
                         int brickY = i * map.brickHeight + 50;
@@ -124,13 +130,13 @@ public class Gameplay extends JPanel implements KeyListener, ActionListener {
                         int brickHeight = map.brickHeight;
 
                         // create collidable bricks
-                        Rectangle rect = new Rectangle(brickX, brickY, brickWidth, brickHeight);
+                        Rectangle brickRect = new Rectangle(brickX, brickY, 
+                                brickWidth, brickHeight);
                         Rectangle ballRect = new Rectangle(ballposX, ballposY, 20, 20);
-                        Rectangle brickRect = rect;
                         
                         // if collision with ball
                         if (ballRect.intersects(brickRect)) {
-                            map.setBrickValue(0, i, j);
+                            map.setBrickValue(i, j);
                             totalBricks--;
                             score += 5;
                             // rebound ball off bricks
@@ -151,13 +157,11 @@ public class Gameplay extends JPanel implements KeyListener, ActionListener {
             ballposY += ballYdir;
             if (ballposX < 0) { // rebound off left border
                 ballXdir = -ballXdir;   
-            }
-            if (ballposY < 0) { // rebound off top border
+            } else if (ballposY < 0) { // rebound off top border
                 ballYdir = -ballYdir;   
-            }
-            if (ballposX > 660) { // rebound off right border
+            } else if (ballposX > 660) { // rebound off right border
                 ballXdir = -ballXdir;   
-            }   
+            }           
         }
 
         repaint();
@@ -171,17 +175,13 @@ public class Gameplay extends JPanel implements KeyListener, ActionListener {
             } else {
                 moveRight();
             }
-        }
-        
-        if (e.getKeyCode() == KeyEvent.VK_LEFT) { // left key pressed
+        } else if (e.getKeyCode() == KeyEvent.VK_LEFT) { // left key pressed
             if (playerX < 10) {
                 playerX = 10;
             } else {
                 moveLeft();
             }
-        }
-        
-        if (e.getKeyCode() == KeyEvent.VK_ENTER &&
+        } else if (e.getKeyCode() == KeyEvent.VK_ENTER &&
                 !play) { // game over, reset to default           
             play = true;
             ballposX = 120;
@@ -213,9 +213,4 @@ public class Gameplay extends JPanel implements KeyListener, ActionListener {
         play = true;
         playerX -= 20;
     }
-
-    /* sprites */
-    Image background = new Image(new File("darkcity.jpg"));
-    Image virus = new Image(new File("coronavirus.png"));
-    Image paddle = new Image(new File("petridish.png"));
 }
