@@ -108,6 +108,17 @@ public class Gameplay extends JPanel implements KeyListener, ActionListener {
         g.dispose();
     }
 
+    /* player movement methods */
+    public void moveRight() {
+        play = true;
+        playerX += 20;
+    }
+
+    public void moveLeft() {
+        play = true;
+        playerX -= 20;
+    }
+
     /* override action and key listeners */
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -202,15 +213,4 @@ public class Gameplay extends JPanel implements KeyListener, ActionListener {
 
     @Override
     public void keyReleased(KeyEvent e) {}
-
-    /* player movement methods */
-    public void moveRight() {
-        play = true;
-        playerX += 20;
-    }
-
-    public void moveLeft() {
-        play = true;
-        playerX -= 20;
-    }
 }
